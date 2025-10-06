@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insight 英文法・語法・熟語　学習用サイト（25章）</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Tinos:wght@700&display=swap');
+        
+        body {
+            background-color: #007BFF; /* ビビットなブルー */
+            font-family: 'Noto Sans JP', sans-serif;
+        }
+
+        /* 英語フォントをTimes New Romanに設定 */
+        .font-english {
+            font-family: 'Tinos', 'Times New Roman', serif;
+            font-weight: 700;
+            font-size: 1.25rem; /* 20px */
+            line-height: 1.75rem; /* 28px */
+        }
+
+        .answer-span {
+            color: #DC2626; /* 赤色 */
+            font-weight: 700;
+            display: none;
+        }
+
+        .underline-span {
+            text-decoration: underline;
+            text-underline-offset: 4px;
+            display: inline;
+        }
+
+        .show-answer .answer-span {
+            display: inline;
+        }
+
+        .show-answer .underline-span {
+            display: none;
+        }
+        
+        .explanation {
+            display: none;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div id="app-container" class="container mx-auto p-4 md:p-8 max-w-4xl">
+        <header class="text-center mb-8 bg-blue-500 p-4 rounded-xl shadow-lg">
+            <h1 class="text-2xl md:text-3xl font-bold text-white">Insight 英文法・語法・熟語</h1>
+            <h2 class="text-xl md:text-2xl font-bold text-white">学習用サイト（25章 名詞を含む熟語）</h2>
+        </header>
+
+        <main class="bg-white/90 backdrop-blur-sm p-6 rounded-xl shadow-lg mb-28">
+            <div class="text-right mb-6">
+                <button id="start-quiz-btn" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-lg shadow transition-transform transform hover:scale-105">
+                    ランダムテスト
+                </button>
+            </div>
+
+            <div id="sentence-list" class="space-y-6">
+                <!-- Sentences will be populated by JS -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Control Panel -->
+    <div id="control-panel" class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md p-4 border-t-2 border-gray-200 shadow-2xl flex justify-center items-center space-x-2 md:space-x-4">
+        <button id="toggle-answer-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105">表示/非表示</button>
+        <button id="play-sound-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105">音声再生</button>
+        <button id="record-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105">録音評価</button>
+        <button id="toggle-explanation-btn" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105">解説</button>
+    </div>
+
+    <!-- Message/Score Modal -->
+    <div id="message-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+        <div id="message-content" class="bg-white p-8 rounded-lg shadow-xl text-center">
+            <!-- Message content will be populated by JS -->
+        </div>
+    </div>
+    
+    <!-- Quiz Modal -->
+    <div id="quiz-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-40 p-4">
+        <div class="bg-white w-full max-w-2xl p-8 rounded-2xl shadow-2xl relative">
+            <button id="close-quiz-btn" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-3xl font-bold">&times;</button>
+            <div id="quiz-content">
+                <!-- Quiz content will be populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chapterData = [
+            { id: "1160", ja: "見渡す限り人影はなかった。", en: "There was not a soul {in sight}.", answer: "in sight", explanation: "□ in sight 「見えるところに」\n⇔ out of sight 「見えなくなって」" },
+            { id: "1161", ja: "私は血を見ると気が遠くなる。", en: "I feel faint {at the sight of blood}.", answer: "at the sight of blood", explanation: "□ at the sight of A 「Aを見て，Aを見るとすぐに」" },
+            { id: "1162", ja: "昨日，ショッピングモールで友達を見かけた。", en: "I {caught sight of} my friend at the mall yesterday.", answer: "caught sight of", explanation: "□ catch sight of A 「Aを見つける」⇔ lose sight of A" },
+            { id: "1163", ja: "私たちの目標を見失ってはいけない。", en: "We must not {lose sight of} our goal.", answer: "lose sight of", explanation: "□ lose sight of A 「Aを見失う」⇔ catch sight of A" },
+            { id: "1164", ja: "去年の夏，山口を観光した。", en: "I {saw the sights of} Yamaguchi last summer.", answer: "saw the sights of", explanation: "□ see the sights of A 「Aを見物する，Aを観光する」" },
+            { id: "1165-1", ja: "生徒はクラブ活動に参加すべきだ。", en: "Students should {take part in club activities}.", answer: "take part in club activities", explanation: "□ take part in A / participate in A 「Aに参加する」" },
+            { id: "1165-2", ja: "私はボランティア活動に参加したいです。", en: "I’d like to {participate in volunteer work}.", answer: "participate in volunteer work", explanation: "□ participate in A 「Aに参加する」" },
+            { id: "1166", ja: "育児で積極的な役割を果たす父親がますます増えている。", en: "More and more fathers are {playing an active role in raising} their children.", answer: "playing an active role in raising", explanation: "□ play [take] a / an ～ role in A [doing] / play [take] a / an ～ part in A [doing] 「Aに[…することに]おいて～な役割を果たす」" },
+            { id: "1167", ja: "電車は定刻に駅を出発した。", en: "The train left the station {on time}.", answer: "on time", explanation: "□ on time 「時間通りに」" },
+            { id: "1168", ja: "その少女はバスに間に合うようにバス停に着いた。", en: "The girl arrived at the bus stop {in time} to catch her bus.", answer: "in time", explanation: "□ in time (for A) 「(Aに)間に合って」" },
+            { id: "1169", ja: "「大阪では楽しく過ごせましたか。」「最高でした！」", en: "“Did you {have a good time} in Osaka?” “It was amazing!”", answer: "have a good time", explanation: "□ have a good [great] time 「楽しい時を過ごす」" },
+            { id: "1170", ja: "私たちは電車の中でトランプをして時間をつぶした。", en: "We {killed time} playing cards on the train.", answer: "killed time", explanation: "□ kill time 「時間をつぶす」" },
+            { id: "1171", ja: "時間をかけてゆっくりやってください。急ぎではありませんから。", en: "{Take your time}. There’s no rush.", answer: "Take your time", explanation: "□ take one’s time 「(時間をかけて)ゆっくりやる」" },
+            { id: "1172", ja: "その祭りは毎年10月に開催される。", en: "The festival {takes place} every October.", answer: "takes place", explanation: "□ take place 「(行事などが)行われる」＝ be held" },
+            { id: "1173", ja: "近い将来，AIが労働者に取って代わるだろう。", en: "AI will {take the place of} workers in the near future.", answer: "take the place of", explanation: "□ take the place of A / take A’s place 「Aに取って代わる」＝ replace A" },
+            { id: "1174", ja: "その薬はすぐに効いた。", en: "The medicine {took effect} quickly.", answer: "took effect", explanation: "□ take effect ①「(薬などが)効く」②「(法律などが)施行される」" },
+            { id: "1175", ja: "睡眠不足は免疫系に影響を与えることがある。", en: "Lack of sleep can {have an effect on} your immune system.", answer: "have an effect on", explanation: "□ have an effect on A / have an influence on A 「Aに影響を与える」＝ affect A" },
+            { id: "1176", ja: "緊張した時，私はいつも深呼吸をする。", en: "When I get nervous, I always {take a deep breath}.", answer: "take a deep breath", explanation: "□ take a deep breath 「深呼吸する」＝ breathe deeply" },
+            { id: "1177", ja: "彼女は水中でとても長い時間息を止めることができる。", en: "She can {hold her breath} underwater for a very long time.", answer: "hold her breath", explanation: "□ hold one’s breath 「息を止める」" },
+            { id: "1178", ja: "夕日の美しさに私は息をのんだ。", en: "The beauty of the sunset {took my breath away}.", answer: "took my breath away", explanation: "□ S take one’s breath away 「S(のため)に息をのむ[はっとする]」" },
+            { id: "1179", ja: "枯れ草に火がついた。", en: "The dry grass {caught fire}.", answer: "caught fire", explanation: "□ catch fire 「火がつく」" },
+            { id: "1180", ja: "子どもたちがマッチで遊んでいて，ごみ袋に火をつけた。", en: "The children were playing with matches and {set the trash bag on fire}.", answer: "set the trash bag on fire", explanation: "□ set A on fire 「Aに火をつける」" },
+            { id: "1181", ja: "テレビゲームを何時間も続けてやるのは健康に良くない。", en: "It is not healthy to play video games for hours {on end}.", answer: "on end", explanation: "□ 期間 ＋ on end 「～の間続けて」" },
+            { id: "1182", ja: "期末テストがようやく終わった。", en: "The term exams have finally {come to an end}.", answer: "come to an end", explanation: "□ come to an end 「終わる」＝ end" },
+            { id: "1183", ja: "戦争を終わらせるには外交が不可欠だ。", en: "Diplomacy is essential for {putting an end to} a war.", answer: "putting an end to", explanation: "□ put [bring] an end to A 「Aを終わらせる」＝ end A" },
+            { id: "1184", ja: "多くの家庭にとって，家計をやりくりするのは難しい。", en: "Many families find it difficult to {make ends meet}.", answer: "make ends meet", explanation: "□ make ends meet 「収支を合わせる」" },
+            { id: "1185", ja: "父は禁煙してから太ってしまった。", en: "My father has {put on weight} since he quit smoking.", answer: "put on weight", explanation: "□ gain weight / put on weight 「太る」⇔ lose weight" },
+            { id: "1186", ja: "ウォーキングは体重を減らすための簡単な方法だ。", en: "Walking is an easy way to {lose weight}.", answer: "lose weight", explanation: "□ lose weight 「やせる，減量する」⇔ gain weight" },
+            { id: "1187-1", ja: "多くの人がスマートフォンのテキストメッセージを使って連絡を取り合っている。", en: "Many people use text messaging on their smartphones to {keep in touch}.", answer: "keep in touch", explanation: "□ keep [stay] in touch (with A) 「(Aと)連絡を取り合っている」" },
+            { id: "1187-2", ja: "どうすればあなたと連絡が取れますか。", en: "How can I {get in touch with you}?", answer: "get in touch with you", explanation: "□ get in touch (with A) 「(Aと)連絡を取る」＝ contact A" },
+            { id: "1188", ja: "これを手伝ってくれる人に心当たりはありますか。", en: "Do you {have someone in mind} to help with this?", answer: "have someone in mind", explanation: "□ have A in mind 「Aを考えている」" },
+            { id: "1189", ja: "君の言ったことを覚えておくよ。", en: "I’ll {keep what you said in mind}.", answer: "keep what you said in mind", explanation: "□ keep A in mind / bear A in mind 「Aを心に留めておく」＝ remember A" },
+            { id: "1190", ja: "彼が考えを変えて，私たちのチームに加わってくれることを願っています。", en: "I hope he {changes his mind} and joins our team.", answer: "changes his mind", explanation: "□ change one’s mind 「考えを変える，気が変わる」" },
+            { id: "1191", ja: "私たちのチームに加わるかどうか，決心はついた？", en: "Have you {made up your mind} whether to join our team?", answer: "made up your mind", explanation: "□ make up one’s mind 「決心する」＝ decide" },
+            { id: "1192", ja: "車いすが通りますので道を空けてください。", en: "Please {make way for} the wheelchair.", answer: "make way for", explanation: "□ make way (for A) 「(Aに)道を空ける」" },
+            { id: "1193", ja: "できるだけ早く15番ゲートへお越しください。", en: "Please {make your way to} gate 15 as soon as possible.", answer: "make your way to", explanation: "□ make one’s way (to A) 「(Aへ)進む」＝ go (to A)" },
+            { id: "1194", ja: "その会社の最高経営責任者はいつも自分の思い通りにする。", en: "The CEO of the company always {gets their own way}.", answer: "gets their own way", explanation: "□ get [have] one’s own way 「自分の思い通りにする」" },
+            { id: "1195", ja: "eメールを書くときは簡潔で的を射たものにするのがいちばんだ。", en: "It is best to be brief and {to the point} when writing emails.", answer: "to the point", explanation: "□ to the point 「的を射た」\n⇔ beside the point 「的外れ」" },
+            { id: "1196", ja: "電話が鳴った時，私はちょうど出かけるところだった。", en: "I {was on the point of leaving} when the phone rang.", answer: "was on the point of leaving", explanation: "□ be on the point of doing 「まさに～しようとしている」＝ be about to do" },
+            { id: "1197", ja: "私はいつも早めに到着するようにしている。", en: "I always {make a point of arriving} early.", answer: "make a point of arriving", explanation: "□ make a point of doing 「～するようにしている」" },
+            { id: "1198", ja: "その会社は持続可能性への取り組みを重要視している。", en: "The company {makes much of} its commitment to sustainability.", answer: "makes much of", explanation: "□ make much of A 「Aを重要視する」\n⇔ make light [little] of A 「Aを軽視する」" },
+            { id: "1199", ja: "最近，お互いにあまり会っていない。", en: "We {haven’t seen much of each other} lately.", answer: "haven’t seen much of each other", explanation: "□ see much of A 「(否定文で)Aにあまり会わない」" },
+            { id: "1200", ja: "彼は現代アートを大したものとは思っていない。", en: "He {doesn’t think much of} modern art.", answer: "doesn’t think much of", explanation: "□ don’t think much of A 「Aを大したものとは思わない」" },
+            { id: "1201", ja: "子どものスクリーンタイムを制限して，大人は制限しないというのは筋が通らない。", en: "It {makes no sense to} limit screen time for children but not for adults.", answer: "makes no sense to", explanation: "□ make sense 「意味をなす，理屈に合う」\n□ It makes no sense to do 「～するのは意味をなさない」" },
+            { id: "1202", ja: "芸術家として生計を立てるのは難しい。", en: "It is difficult to {make a living} as an artist.", answer: "make a living", explanation: "□ make a living / earn a living 「生計を立てる」" },
+            { id: "1203", ja: "留学はあなたにとって大きな意味を持つことでしょう。", en: "Studying abroad will {make a big difference to you}.", answer: "make a big difference to you", explanation: "□ make a difference (to A) ①「(Aにとって)重要である」②「(Aに)違いをもたらす」" },
+            { id: "1204", ja: "私たちは太陽エネルギーを利用できる。", en: "We can {make use of solar energy}.", answer: "make use of solar energy", explanation: "□ make use of A 「Aを利用する」＝ utilize A" },
+            { id: "1205", ja: "私をからかうのはやめてください。", en: "Stop {making fun of me}.", answer: "making fun of me", explanation: "□ make fun of A 「Aをからかう」＝ tease A" },
+            { id: "1206", ja: "ばかなまねはしたくはないんだ。", en: "I don’t want to {make a fool of myself}.", answer: "make a fool of myself", explanation: "□ make a fool of A 「Aを笑いものにする」\n□ make a fool of oneself 「ばかなまねをする」" },
+            { id: "1207", ja: "私はいくつかの科目でかなり良くなった。", en: "I have {made good progress in} several subjects.", answer: "made good progress in", explanation: "□ make progress in [with] A [doing] 「Aに[～することに]おいて進歩する」" },
+            { id: "1208-1", ja: "10分間，休憩にしましょう。", en: "Let’s {take a ten-minute break}.", answer: "take a ten-minute break", explanation: "□ take [have] a break / take [have] a rest 「休憩する」" },
+            { id: "1208-2", ja: "疲れているみたいだね。ひと休みしたらどう？", en: "You look tired. Why don’t you {take a rest}?", answer: "take a rest", explanation: "□ take [have] a rest 「休憩する」" },
+            { id: "1209", ja: "これを見てください。", en: "{Take a look at this}.", answer: "Take a look at this", explanation: "□ take [have] a look at A 「Aを見る」＝ look at A" },
+            { id: "1210", ja: "私はこの論争においてどちらかの味方をするつもりはない。", en: "I’m not going to {take sides} in this argument.", answer: "take sides", explanation: "□ take sides 「(複数あるうちの)１つを支持する」" },
+            { id: "1211", ja: "彼の言うことはまったく気にしないで。", en: "{Take no notice of} what he says.", answer: "Take no notice of", explanation: "□ take no notice (of A) 「(Aを)まったく気にかけない」" },
+            { id: "1212", ja: "赤ちゃんの世話は大変な仕事だ。", en: "{Taking care of} a baby is hard work.", answer: "Taking care of", explanation: "□ take care of A 「Aの世話をする」＝ look after A" },
+            { id: "1213", ja: "この機会を利用して英語力を向上させます。", en: "I will {take advantage of} this opportunity to improve my English.", answer: "take advantage of", explanation: "□ take advantage of A ①「Aを利用する」②「Aにつけこむ」" },
+            { id: "1214", ja: "彼女の突然の訪問に私たちは驚いた。", en: "Her sudden visit {took us by surprise}.", answer: "took us by surprise", explanation: "□ take A by surprise ①「Aを驚かせる」②「Aの不意をつく」" },
+            { id: "1215", ja: "私たちは手間をかけて学校行事の準備をした。", en: "We {took the trouble to prepare} for the school event.", answer: "took the trouble to prepare", explanation: "□ take the trouble to do 「手間をかけて～する」" },
+            { id: "1216", ja: "他人の不幸を喜んではいけない。", en: "We should not {take delight in} the misfortunes of others.", answer: "take delight in", explanation: "□ take delight in A [doing] 「Aを楽しむ」＝ enjoy A" },
+            { id: "1217", ja: "明日の朝，あなたに電話します。", en: "I’ll {give you a call} tomorrow morning.", answer: "give you a call", explanation: "□ give A a call 「Aに電話をかける」＝ call (up) A" },
+            { id: "1218", ja: "人口の減少はいくつかの問題を引き起こすだろう。", en: "The population decline will {give rise to} several problems.", answer: "give rise to", explanation: "□ give rise to A 「Aを引き起こす」＝ cause A" },
+            { id: "1219", ja: "私の姉はこの春，女の子を出産した。", en: "My sister {gave birth to} a baby girl this spring.", answer: "gave birth to", explanation: "□ give birth to A ①「A(赤ちゃん)を産む」②「A(物事)を生む」" },
+            { id: "1220", ja: "私はほかの人たちが言っていることに注意を払った。", en: "I {paid attention to what} the others were saying.", answer: "paid attention to what", explanation: "□ pay attention to A 「Aに注意を払う」" },
+            { id: "1221-1", ja: "私たちは広島平和記念資料館を訪れた。", en: "We {paid a visit to} the Hiroshima Peace Memorial Museum.", answer: "paid a visit to", explanation: "□ pay a visit to A 「A(場所)を訪れる，A(人)を訪ねる」＝ visit A" },
+            { id: "1221-2", ja: "先週末，和歌山で祖父母を訪ねた。", en: "I {paid my grandparents a visit} in Wakayama last weekend.", answer: "paid my grandparents a visit", explanation: "□ pay A a visit 「A(人)を訪ねる」＝ visit A" },
+            { id: "1222", ja: "失敗すれば，私は面目を失うだろう。", en: "If I fail, I will {lose face}.", answer: "lose face", explanation: "□ lose face 「面目を失う」\n⇔ save face 「面目を保つ」" },
+            { id: "1223", ja: "かっとなったことをおわびします。", en: "I apologize for {losing my temper}.", answer: "losing my temper", explanation: "□ lose one’s temper 「かっとなる，腹を立てる」＝ get very angry" },
+            { id: "1224", ja: "私のバッグを見ておいてくれる？", en: "Can you {keep an eye on my bag} for me?", answer: "keep an eye on my bag", explanation: "□ keep an eye on A 「Aから目を離さない，Aを見ておく」" },
+            { id: "1225", ja: "私の家族はみんな規則正しい生活を送っている。", en: "Everyone in my family {keeps regular hours}.", answer: "keeps regular hours", explanation: "□ keep regular hours 「規則正しい生活を送る」" },
+            { id: "1226", ja: "成人になったら，投票できるようになる。", en: "When I {come of age}, I will be able to vote.", answer: "come of age", explanation: "□ come of age 「成人になる，一人前になる」" },
+            { id: "1227", ja: "姉の死を受け入れるのに長い時間がかかった。", en: "It took me a long time to {come to terms with} my sister’s death.", answer: "come to terms with", explanation: "□ come to terms with A 「A(困難など)を受け入れる」＝ accept A" },
+            { id: "1228", ja: "個人情報の漏えいが明るみに出た。", en: "The leak of personal information {came to light}.", answer: "came to light", explanation: "□ come to light / be brought to light 「(秘密などが)明るみに出る」" },
+            { id: "1229", ja: "私はどのようにして宇宙が誕生したのか知りたい。", en: "I want to know how the universe {came into being}.", answer: "came into being", explanation: "□ come into being / come into existence 「誕生する，創設される」" },
+            { id: "1230", ja: "「ケーキのおかわりはどうですか。」「いいえ，結構です。ダイエット中なので。」", en: "“Would you like some more cake?” “No, thank you. {I’m on a diet}.”", answer: "I’m on a diet", explanation: "□ be on a diet 「ダイエット中だ」\n＋ go on a diet 「ダイエットをする」" },
+            { id: "1231", ja: "従業員たちは20年ぶりのストライキに突入した。", en: "The workers {went on strike} for the first time in 20 years.", answer: "went on strike", explanation: "□ go on strike 「ストライキをする」\n＋ be on strike 「ストライキ中だ」" },
+            { id: "1232", ja: "私の努力はついに実を結んだ。", en: "My efforts finally {bore fruit}.", answer: "bore fruit", explanation: "□ bear fruit 「実を結ぶ」" },
+            { id: "1233", ja: "生徒は研究課題のためにオンライン・リソースを利用できる。", en: "Students {have access to} online resources for their research projects.", answer: "have access to", explanation: "□ have access to A 「Aを利用できる」＝ can use A" },
+            { id: "1234", ja: "彼は私のすることすべてにケチをつける。", en: "He {finds fault with} everything I do.", answer: "finds fault with", explanation: "□ find fault with A 「Aのあら探しをする」" },
+            { id: "1235", ja: "食後に食器を洗います。", en: "I’ll {do the dishes} after dinner.", answer: "do the dishes", explanation: "□ do the dishes / wash the dishes 「食器を洗う」" },
+            { id: "1236", ja: "締め切りに間に合うように頑張っています。", en: "I’m working hard to {meet the deadline}.", answer: "meet the deadline", explanation: "□ meet the deadline 「締め切りに間に合わせる」" },
+            { id: "1237", ja: "好奇心に負けて，私は箱を開けてしまった。", en: "My curiosity {got the better of me}, and I opened the box.", answer: "got the better of me", explanation: "□ get the better of A 「Aを負かす，Aに打ち勝つ」" },
+            { id: "1238", ja: "勉強しないと，試験に落ちる危険を冒すことになる。", en: "If I don’t study, I {run the risk of failing} my exams.", answer: "run the risk of failing", explanation: "□ run [take] the risk of doing 「～する危険を冒す」" },
+            { id: "1239", ja: "遠回しな言い方はやめて。要点を言って。", en: "Don’t {beat around the bush}. Get to the point.", answer: "beat around the bush", explanation: "□ beat around the bush 「遠回しに言う」\n⇔ get to the point 「要点を述べる」" },
+            { id: "1240", ja: "工事の騒音は私をいらいらさせる。", en: "Construction noise {gets on my nerves}.", answer: "gets on my nerves", explanation: "□ get on A’s nerves 「Aの神経にさわる，Aをいらいらさせる」＝ irritate A" },
+            { id: "1241", ja: "先生が名前を呼ぶと，ケンはぱっと立ち上がった。", en: "Ken {jumped to his feet} when the teacher called his name.", answer: "jumped to his feet", explanation: "□ jump to one’s feet 「ぱっと立ち上がる」" },
+            { id: "1242", ja: "私は君が約束を守ると信じている。", en: "I trust you to {keep your word}.", answer: "keep your word", explanation: "□ keep one’s word / keep one’s promise(s) 「約束を守る」" },
+            { id: "1243", ja: "彼はいつも約束を破るから，信用していない。", en: "He always {breaks his word}, so I don’t trust him.", answer: "breaks his word", explanation: "□ break one’s word / break one’s promise(s) 「約束を破る」" },
+            { id: "1244", ja: "数学のテストに向けて，これらの公式をすべて暗記しなければならない。", en: "I have to {learn all these formulas by heart} for the math test.", answer: "learn all these formulas by heart", explanation: "□ learn A by heart 「Aを暗記する」＝ memorize A" },
+            { id: "1245", ja: "自分のアイデアを実行に移したい。", en: "I want to {put my ideas into practice}.", answer: "put my ideas into practice", explanation: "□ put A into practice 「Aを実行する」＝ carry out A" }
+        ];
+
+        // --- App State ---
+        let activeSentenceElement = null;
+        let SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition;
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+        }
+
+        // --- DOM Elements ---
+        const sentenceList = document.getElementById('sentence-list');
+        const toggleAnswerBtn = document.getElementById('toggle-answer-btn');
+        const playSoundBtn = document.getElementById('play-sound-btn');
+        const recordBtn = document.getElementById('record-btn');
+        const toggleExplanationBtn = document.getElementById('toggle-explanation-btn');
+        const startQuizBtn = document.getElementById('start-quiz-btn');
+        const messageModal = document.getElementById('message-modal');
+        const messageContent = document.getElementById('message-content');
+        const quizModal = document.getElementById('quiz-modal');
+        const closeQuizBtn = document.getElementById('close-quiz-btn');
+        const quizContent = document.getElementById('quiz-content');
+
+
+        // --- Functions ---
+
+        /**
+         * Parses the English sentence template and creates the HTML structure.
+         * @param {string} enTemplate - The English sentence with {answer} placeholder.
+         * @param {string} answer - The answer part of the sentence.
+         * @returns {string} - The HTML string for the English sentence.
+         */
+        function formatEnglishSentence(enTemplate, answer) {
+            const blank = '__________';
+            const answerHtml = `<span class="answer-span">${answer}</span>`;
+            const underlineHtml = `<span class="underline-span">${blank}</span>`;
+            const formattedSentence = enTemplate.replace(`{${answer}}`, `${answerHtml}${underlineHtml}`);
+            return formattedSentence;
+        }
+
+        /**
+         * Renders all sentences for the chapter.
+         */
+        function renderChapter() {
+            sentenceList.innerHTML = ''; // Clear existing list
+            chapterData.forEach(item => {
+                const sentenceDiv = document.createElement('div');
+                sentenceDiv.className = 'sentence-item p-4 border border-gray-200 rounded-lg bg-white transition-shadow duration-300 hover:shadow-md';
+                sentenceDiv.dataset.id = item.id;
+                sentenceDiv.dataset.fullSentence = item.en.replace(`{${item.answer}}`, item.answer);
+
+                const englishSentenceHtml = formatEnglishSentence(item.en, item.answer);
+
+                sentenceDiv.innerHTML = `
+                    <div class="flex items-start space-x-4">
+                        <span class="text-lg font-bold text-gray-500">${item.id}</span>
+                        <div class="flex-1">
+                            <p class="mb-2 text-gray-700">${item.ja}</p>
+                            <p class="font-english">${englishSentenceHtml}</p>
+                            <div class="explanation mt-4 p-4 bg-yellow-100 border-l-4 border-yellow-400 text-gray-700 rounded-r-lg">
+                                ${item.explanation}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                sentenceList.appendChild(sentenceDiv);
+            });
+            
+            // Add click listener to each sentence item
+            document.querySelectorAll('.sentence-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    // Don't select if clicking inside explanation
+                    if (e.target.closest('.explanation')) return;
+
+                    if (activeSentenceElement) {
+                        activeSentenceElement.classList.remove('ring-2', 'ring-blue-400', 'shadow-xl');
+                    }
+                    activeSentenceElement = item;
+                    activeSentenceElement.classList.add('ring-2', 'ring-blue-400', 'shadow-xl');
+                });
+            });
+            
+            // Select the first sentence by default
+            if (sentenceList.firstChild) {
+                 sentenceList.firstChild.click();
+            }
+        }
+        
+        /**
+         * Shows a message in a modal.
+         * @param {string} htmlContent - The HTML content for the message.
+         * @param {number} duration - Optional duration in ms to auto-hide.
+         */
+        function showMessage(htmlContent, duration = null) {
+            messageContent.innerHTML = htmlContent;
+            messageModal.classList.remove('hidden');
+            if (duration) {
+                setTimeout(() => {
+                    messageModal.classList.add('hidden');
+                }, duration);
+            }
+        }
+
+        /**
+         * Plays the audio for the currently selected sentence.
+         */
+        function playSound() {
+            if (!activeSentenceElement) {
+                showMessage('<p>文を選択してください。</p>', 2000);
+                return;
+            }
+            const textToSpeak = activeSentenceElement.dataset.fullSentence;
+            const utterance = new SpeechSynthesisUtterance(textToSpeak);
+            utterance.lang = 'en-US';
+            speechSynthesis.speak(utterance);
+        }
+
+        /**
+         * Handles the recording and evaluation process.
+         */
+        function handleRecording() {
+            if (!activeSentenceElement) {
+                showMessage('<p>文を選択してください。</p>', 2000);
+                return;
+            }
+            if (!SpeechRecognition) {
+                showMessage('<p>お使いのブラウザは音声認識に対応していません。</p>', 3000);
+                return;
+            }
+
+            showMessage('<p class="text-2xl">マイクに向かって話してください...</p><div class="animate-pulse text-red-500 text-4xl mt-4">●</div>');
+            
+            recognition.start();
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                evaluatePronunciation(transcript);
+            };
+
+            recognition.onerror = (event) => {
+                showMessage(`<p>エラーが発生しました: ${event.error}</p>`, 3000);
+            };
+            
+            recognition.onend = () => {
+                 if (messageModal.classList.contains('hidden') === false && messageContent.innerHTML.includes('マイクに')) {
+                    messageModal.classList.add('hidden');
+                 }
+            };
+        }
+        
+        /**
+         * Evaluates the pronunciation by comparing the transcript to the original sentence.
+         * @param {string} transcript - The text transcribed from user's speech.
+         */
+        function evaluatePronunciation(transcript) {
+            const originalText = activeSentenceElement.dataset.fullSentence;
+
+            const cleanOrig = originalText.toLowerCase().replace(/[^\w\s]/g, '').split(' ');
+            const cleanTrans = transcript.toLowerCase().replace(/[^\w\s]/g, '').split(' ');
+            
+            let matches = 0;
+            cleanOrig.forEach(word => {
+                if (cleanTrans.includes(word)) {
+                    matches++;
+                }
+            });
+
+            const similarity = matches / cleanOrig.length;
+            
+            // 甘めの採点ロジック
+            let score;
+            if (similarity > 0.9) {
+                score = 95 + Math.floor(Math.random() * 5); // 95-99
+            } else if (similarity > 0.7) {
+                score = 90 + Math.floor(Math.random() * 6); // 90-95
+            } else if (similarity > 0.5) {
+                score = 85 + Math.floor(Math.random() * 5); // 85-89
+            } else if (similarity > 0.3) {
+                score = 80 + Math.floor(Math.random() * 5); // 80-84
+            } else {
+                score = 70 + Math.floor(Math.random() * 10); // 70-79
+            }
+            
+            // 満点を少し出にくくする
+            if (score === 100 && Math.random() < 0.3) {
+                score = 99;
+            }
+
+            const messageHtml = `
+                <h3 class="text-2xl font-bold mb-4">評価結果</h3>
+                <p class="text-7xl font-bold text-blue-600 mb-4">${score}<span class="text-2xl">点</span></p>
+                <p class="text-gray-600 mb-2"><strong>あなたの発音:</strong> ${transcript}</p>
+                <p class="text-gray-600"><strong>元の文:</strong> ${originalText}</p>
+                <button onclick="document.getElementById('message-modal').classList.add('hidden')" class="mt-6 bg-blue-500 text-white py-2 px-6 rounded-lg">閉じる</button>
+            `;
+            showMessage(messageHtml);
+        }
+
+        /**
+         * Starts the quiz.
+         */
+        function startQuiz() {
+            if (chapterData.length < 10) {
+                 showMessage('<p>クイズを作成するには、文が10個以上必要です。</p>', 3000);
+                 return;
+            }
+
+            // Get 10 random unique questions
+            const shuffled = [...chapterData].sort(() => 0.5 - Math.random());
+            const questions = shuffled.slice(0, 10);
+
+            let currentQuestionIndex = 0;
+            let score = 0;
+
+            function showQuestion() {
+                if (currentQuestionIndex >= questions.length) {
+                    showQuizResult();
+                    return;
+                }
+
+                const question = questions[currentQuestionIndex];
+                const correctAnswer = question.answer;
+
+                // Get 3 random incorrect answers
+                const incorrectAnswers = chapterData
+                    .filter(item => item.answer !== correctAnswer)
+                    .sort(() => 0.5 - Math.random())
+                    .slice(0, 3)
+                    .map(item => item.answer);
+
+                const options = [correctAnswer, ...incorrectAnswers].sort(() => 0.5 - Math.random());
+                
+                const questionSentence = question.en.replace(`{${question.answer}}`, ' (______) ');
+
+                quizContent.innerHTML = `
+                    <h3 class="text-2xl font-bold mb-2">問題 ${currentQuestionIndex + 1}/10</h3>
+                    <p class="text-lg mb-4">${question.ja}</p>
+                    <p class="font-english text-xl mb-6 p-4 bg-gray-100 rounded-lg">${questionSentence}</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        ${options.map(opt => `<button class="quiz-option p-4 bg-blue-100 hover:bg-blue-200 rounded-lg text-left text-lg font-english" data-answer="${opt}">${opt}</button>`).join('')}
+                    </div>
+                `;
+
+                document.querySelectorAll('.quiz-option').forEach(button => {
+                    button.addEventListener('click', () => {
+                        if (button.dataset.answer === correctAnswer) {
+                            score++;
+                            button.classList.add('bg-green-400', 'text-white');
+                        } else {
+                            button.classList.add('bg-red-400', 'text-white');
+                            // Highlight correct answer
+                            document.querySelector(`.quiz-option[data-answer="${CSS.escape(correctAnswer)}"]`).classList.add('bg-green-400', 'text-white');
+                        }
+                        
+                        setTimeout(() => {
+                            currentQuestionIndex++;
+                            showQuestion();
+                        }, 1200);
+                    });
+                });
+            }
+
+            function showQuizResult() {
+                quizContent.innerHTML = `
+                    <h3 class="text-3xl font-bold mb-4 text-center">テスト終了！</h3>
+                    <p class="text-center text-xl mb-6">あなたのスコアは...</p>
+                    <p class="text-center text-7xl font-bold text-purple-600">${score * 10}<span class="text-3xl">点</span></p>
+                    <p class="text-center text-xl mt-2">(${questions.length}問中 ${score}問正解)</p>
+                `;
+            }
+
+            showQuestion();
+            quizModal.classList.remove('hidden');
+        }
+
+
+        // --- Event Listeners ---
+
+        toggleAnswerBtn.addEventListener('click', () => {
+            if (!activeSentenceElement) {
+                showMessage('<p>文を選択してください。</p>', 2000);
+                return;
+            }
+            activeSentenceElement.classList.toggle('show-answer');
+        });
+
+        toggleExplanationBtn.addEventListener('click', () => {
+            if (!activeSentenceElement) {
+                showMessage('<p>文を選択してください。</p>', 2000);
+                return;
+            }
+            const explanationDiv = activeSentenceElement.querySelector('.explanation');
+            if (explanationDiv.style.display === 'block') {
+                explanationDiv.style.display = 'none';
+            } else {
+                explanationDiv.style.display = 'block';
+            }
+        });
+        
+        playSoundBtn.addEventListener('click', playSound);
+        recordBtn.addEventListener('click', handleRecording);
+        startQuizBtn.addEventListener('click', startQuiz);
+        closeQuizBtn.addEventListener('click', () => quizModal.classList.add('hidden'));
+
+        // --- Initial Load ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderChapter();
+        });
+    </script>
+</body>
+</html>
